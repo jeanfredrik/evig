@@ -1,6 +1,6 @@
 {
   "name": "evig",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A persistent document database that emits JSON patches",
   "type": "module",
   "main": "./dist/cjs/index.js",
