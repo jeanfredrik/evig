@@ -1,22 +1,22 @@
 {
   "name": "evig",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A persistent document database that emits JSON patches",
   "main": "./dist/evig.umd.cjs",
   "types": "dist/index.d.ts",
   "module": "./dist/evig.js",
   "exports": {
     ".": {
-      "types": "./build/types/index.d.ts",
-      "require": "./build/cjs/index.js",
-      "import": "./build/esm/index.js",
-      "default": "./build/esm/index.js"
+      "types": "./dist/types/index.d.ts",
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./*": {
-      "types": "./build/types/*.d.ts",
-      "require": "./build/cjs/*.js",
-      "import": "./build/esm/*.js",
-      "default": "./build/esm/*.js"
+      "types": "./dist/types/*.d.ts",
+      "require": "./dist/cjs/*.js",
+      "import": "./dist/esm/*.js",
+      "default": "./dist/esm/*.js"
     }
   },
   "scripts": {
