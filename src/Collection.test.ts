@@ -109,6 +109,33 @@ describe('Collection', () => {
     expect(updatedDoc).toEqual({ id: 'dummy', name: 'updated' });
   });
 
+  describe('replaceAll', () => {
+    it('replaces all documents', async () => {
+      const collection = new Collection('test', { redis });
+      const data = {
+        '1': { id: '1', name: 'test' },
+        '2': { id: '2', name: 'test' },
+      };
+      await collection.replaceAll(data);
+      const allDocs = collection.snapshot;
+      expect(allDocs).toEqual(data);
+    });
+
+    it('replaces all documents with an array', async () => {
+      const collection = new Collection('test', { redis });
+      const data = [
+        { id: '1', name: 'test' },
+        { id: '2', name: 'test' },
+      ];
+      await collection.replaceAll(data);
+      const allDocs = collection.snapshot;
+      expect(allDocs).toEqual({
+        '1': data[0],
+        '2': data[1],
+      });
+    });
+  });
+
   afterAll(async () => {
     // await redis.quit();
   });

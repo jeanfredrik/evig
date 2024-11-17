@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { RedisClientType } from 'redis';
 import { Document } from './Document';
 import {
+  castDraft,
   Draft,
   enablePatches,
   Patch as ImmerPatch,
@@ -13,9 +14,10 @@ import { Patch, RedisPatch } from './types';
 import fromImmerPatch from './fromImmerPatch';
 import toRedisPatches from './toRedisPatches';
 import applyRedisPatches from './applyRedisPatches';
-import { map } from 'ramda';
+import { indexBy, map } from 'ramda';
 import parseDoc from './parseDoc';
 import stringifyDoc from './stringifyDoc';
+import mimic from './mimic';
 
 enablePatches();
 
@@ -163,6 +165,23 @@ export default class Collection<
       const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
         draft[id] ??= { id } as Draft<TDocument>;
         recipe(draft[id]);
+      });
+      this.data = newData;
+      return { immerPatches };
+    });
+    const { immerPatches } = (await job.result) as {
+      immerPatches: ImmerPatch[];
+    };
+    this.propagateImmerPatches(immerPatches);
+  }
+
+  async replaceAll(data: { [id: string]: TDocument } | TDocument[]) {
+    if (Array.isArray(data)) {
+      data = indexBy((doc) => this.getId(doc), data);
+    }
+    const job = queue.add(async () => {
+      const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
+        mimic(draft, castDraft(data));
       });
       this.data = newData;
       return { immerPatches };
