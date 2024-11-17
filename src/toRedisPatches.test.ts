@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
-import { Patch } from './types';
-import toRedisPatches from './toRedisPatches';
+import { Patch } from './types.d.js';
+import toRedisPatches from './toRedisPatches.js';
 
 describe('toRedisPatches', () => {
   test('It handles empty patch list', () => {

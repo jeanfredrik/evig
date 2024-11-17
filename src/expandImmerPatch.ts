@@ -1,4 +1,4 @@
-import { ImmerPatch } from './types';
+import { ImmerPatch } from './types.d.js';
 
 /**
  * Turns a patch that adds an object into multiple patches, one for each operation.

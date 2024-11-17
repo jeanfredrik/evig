@@ -8,9 +8,9 @@ import {
   afterEach,
   vi,
 } from 'vitest';
-import View from './View';
-import createCollection from './createCollection';
-import Collection from './Collection';
+import View from './View.js';
+import createCollection from './createCollection.js';
+import Collection from './Collection.js';
 import { createClient, RedisClientType } from 'redis';
 
 describe('View', () => {

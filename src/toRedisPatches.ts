@@ -1,4 +1,4 @@
-import { Patch, RedisPatch } from './types';
+import { Patch, RedisPatch } from './types.d.js';
 
 export default function toRedisPatches(patches: Patch[]): RedisPatch[] {
   const redisPatches: RedisPatch[] = [];

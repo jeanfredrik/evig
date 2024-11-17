@@ -1,7 +1,7 @@
 import { describe } from 'vitest';
-import expandImmerPatch from './expandImmerPatch';
+import expandImmerPatch from './expandImmerPatch.js';
 import { test, expect } from 'vitest';
-import { ImmerPatch } from './types';
+import { ImmerPatch } from './types.d.js';
 
 describe('expandImmerPatch', () => {
   test('It expands a patch that adds an object into multiple patches', () => {

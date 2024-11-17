@@ -1,6 +1,6 @@
-import Collection from './Collection';
-import { Document } from './Document';
-import View, { ViewOptions } from './View';
+import Collection from './Collection.js';
+import { Document } from './Document.js';
+import View, { ViewOptions } from './View.js';
 
 export default async function createView<
   TDocument extends Document<'id'> = Document<'id'>,

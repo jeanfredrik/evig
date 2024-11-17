@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import queue from './queue';
+import queue from './queue.js';
 
 describe('queue', () => {
   it('Handles throws of non-errors', async () => {

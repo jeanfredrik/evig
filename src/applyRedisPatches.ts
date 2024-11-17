@@ -1,10 +1,10 @@
 import { RedisClientType } from 'redis';
-import { RedisPatch } from './types';
+import { RedisPatch } from './types.d.js';
 import { applyPatches, enablePatches } from 'immer';
-import toImmerPatch from './toImmerPatch';
-import stringifyDoc from './stringifyDoc';
-import parseDoc from './parseDoc';
-import { Document } from './Document';
+import toImmerPatch from './toImmerPatch.js';
+import stringifyDoc from './stringifyDoc.js';
+import parseDoc from './parseDoc.js';
+import { Document } from './Document.js';
 // import { map } from 'ramda';
 
 enablePatches();

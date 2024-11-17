@@ -9,7 +9,7 @@ import {
 } from 'vitest';
 import { RedisClientType, createClient } from 'redis';
 
-import Collection from './Collection';
+import Collection from './Collection.js';
 
 describe('Collection', () => {
   let redis: RedisClientType;

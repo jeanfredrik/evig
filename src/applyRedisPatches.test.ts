@@ -9,8 +9,8 @@ import {
 } from 'vitest';
 import { RedisClientType, createClient } from 'redis';
 
-import { RedisPatch } from './types';
-import applyRedisPatches from './applyRedisPatches';
+import { RedisPatch } from './types.d.js';
+import applyRedisPatches from './applyRedisPatches.js';
 
 describe('applyRedisPatches', () => {
   let redis: RedisClientType;

@@ -1,4 +1,4 @@
-import isPlainObject from './isPlainObject';
+import isPlainObject from './isPlainObject.js';
 
 /**
  * Makes the minimal set of changes to `source` to make it equal to `target`.

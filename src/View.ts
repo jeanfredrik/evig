@@ -1,9 +1,9 @@
 import EventEmitter from 'node:events';
-import Collection from './Collection';
+import Collection from './Collection.js';
 import { Patch as ImmerPatch } from 'immer';
-import fromImmerPatch from './fromImmerPatch';
-import { Patch } from './types';
-import { Document } from './Document';
+import fromImmerPatch from './fromImmerPatch.js';
+import { Patch } from './types.d.js';
+import { Document } from './Document.js';
 import { filter, map, omit, pick } from 'ramda';
 
 export type ViewEventMap = {

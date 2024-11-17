@@ -1,5 +1,5 @@
-import Collection, { CollectionConstructorOptions } from './Collection';
-import { Document } from './Document';
+import Collection, { CollectionConstructorOptions } from './Collection.js';
+import { Document } from './Document.js';
 
 export default async function createCollection<
   TDocument extends Document<'id'> = Document<'id'>,

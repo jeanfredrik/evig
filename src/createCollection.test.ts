@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import createCollection from './createCollection';
+import createCollection from './createCollection.js';
 import { createClient, RedisClientType } from 'redis';
-import Collection from './Collection';
+import Collection from './Collection.js';
 import { beforeEach } from 'node:test';
 
 describe('createCollection', () => {

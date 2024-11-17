@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import createView from './createView';
+import createView from './createView.js';
 import { createClient, RedisClientType } from 'redis';
-import Collection from './Collection';
+import Collection from './Collection.js';
 import { beforeEach } from 'node:test';
-import createCollection from './createCollection';
-import View from './View';
+import createCollection from './createCollection.js';
+import View from './View.js';
 
 describe('createView', () => {
   let redis: RedisClientType;

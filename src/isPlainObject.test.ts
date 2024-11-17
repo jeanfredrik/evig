@@ -7,7 +7,7 @@ import {
   afterAll,
   afterEach,
 } from 'vitest';
-import isPlainObject from './isPlainObject';
+import isPlainObject from './isPlainObject.js';
 
 describe('isPlainObject', () => {
   it('Returns false if the value is a scalar (including null)', () => {

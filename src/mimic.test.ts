@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { produceWithPatches, enablePatches } from 'immer';
-import mimic from './mimic';
+import mimic from './mimic.js';
 
 enablePatches();
 

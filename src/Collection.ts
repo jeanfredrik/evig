@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { RedisClientType } from 'redis';
-import { Document } from './Document';
+import { Document } from './Document.js';
 import {
   castDraft,
   Draft,
@@ -8,16 +8,16 @@ import {
   Patch as ImmerPatch,
   produceWithPatches,
 } from 'immer';
-import queue from './queue';
-import expandImmerPatch from './expandImmerPatch';
-import { Patch, RedisPatch } from './types';
-import fromImmerPatch from './fromImmerPatch';
-import toRedisPatches from './toRedisPatches';
-import applyRedisPatches from './applyRedisPatches';
+import queue from './queue.js';
+import expandImmerPatch from './expandImmerPatch.js';
+import { Patch, RedisPatch } from './types.d.js';
+import fromImmerPatch from './fromImmerPatch.js';
+import toRedisPatches from './toRedisPatches.js';
+import applyRedisPatches from './applyRedisPatches.js';
 import { indexBy, map } from 'ramda';
-import parseDoc from './parseDoc';
-import stringifyDoc from './stringifyDoc';
-import mimic from './mimic';
+import parseDoc from './parseDoc.js';
+import stringifyDoc from './stringifyDoc.js';
+import mimic from './mimic.js';
 
 enablePatches();
 
