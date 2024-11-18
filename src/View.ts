@@ -1,10 +1,12 @@
 import EventEmitter from 'node:events';
 import Collection from './Collection.js';
-import { Patch as ImmerPatch } from 'immer';
+import { Draft, Patch as ImmerPatch, produceWithPatches } from 'immer';
 import fromImmerPatch from './fromImmerPatch.js';
 import { Patch } from './types.d.js';
 import { Document } from './Document.js';
 import { filter, map, omit, pick } from 'ramda';
+import mimic from './mimic.js';
+import expandImmerPatch from './expandImmerPatch.js';
 
 export type ViewEventMap = {
   // insert: Document<'id'>;
@@ -33,7 +35,7 @@ export default class View<
   readonly collection: TCollection;
   readonly excludedFields: Set<string>;
   readonly includedFields: Set<string>;
-  readonly filter: (doc: TDocument) => boolean;
+  readonly filter?: (doc: TDocument) => boolean;
 
   constructor(
     collection: TCollection,
@@ -41,13 +43,13 @@ export default class View<
       maxListeners = 0,
       includedFields = [],
       excludedFields = [],
-      filter = () => true,
+      filter,
     }: ViewOptions<TDocument> = {},
   ) {
     super();
     this.collection = collection;
     this.collection.on(
-      'expandedImmerPatches',
+      'expandedImmerPatchesWithSnapshot',
       this.onCollectionPatches.bind(this),
     );
     this.excludedFields = new Set(excludedFields);
@@ -56,10 +58,16 @@ export default class View<
     this.setMaxListeners(maxListeners);
   }
 
-  onCollectionPatches(expandedImmerPatches: ImmerPatch[]) {
-    expandedImmerPatches = expandedImmerPatches.filter((patch) =>
-      this.isPatchApplicable(patch),
-    );
+  private onCollectionPatches(
+    expandedImmerPatches: ImmerPatch[],
+    newSnapshot: {
+      [id: string]: TDocument;
+    },
+    oldSnapshot: { [id: string]: TDocument },
+  ) {
+    expandedImmerPatches = this.filter
+      ? this.transformPatches(expandedImmerPatches, newSnapshot, oldSnapshot)
+      : expandedImmerPatches.filter((patch) => this.isPatchApplicable(patch));
     if (expandedImmerPatches.length === 0) {
       return;
     }
@@ -69,11 +77,25 @@ export default class View<
     this.emit('expandedPatches', expandedPatches);
   }
 
-  isPatchApplicable(patch: ImmerPatch) {
-    const id = patch.path[0] as string;
-    if (!this.filter(this.collection.get(id) as TDocument)) {
-      return false;
-    }
+  private transformPatches(
+    _patches: ImmerPatch[], // Kept for future use
+    newSnapshot: {
+      [id: string]: TDocument;
+    },
+    oldSnapshot: { [id: string]: TDocument },
+  ): ImmerPatch[] {
+    const newViewSnapshot = this.transformSnapshot(newSnapshot);
+    const oldViewSnapshot = this.transformSnapshot(oldSnapshot);
+    const [, transformedPatches] = produceWithPatches(
+      oldViewSnapshot,
+      (draft) => {
+        mimic(draft, newViewSnapshot as Draft<TDocument>);
+      },
+    );
+    return transformedPatches.flatMap(expandImmerPatch);
+  }
+
+  private isPatchApplicable(patch: ImmerPatch) {
     const field = patch.path[1] as string;
     if (field && this.excludedFields.has(field)) {
       return false;
@@ -101,23 +123,25 @@ export default class View<
     ) as TDocument;
   }
 
-  get snapshot(): { [id: string]: TDocument } {
-    const viewSnapshot = map(
+  private transformSnapshot(snapshot: { [id: string]: TDocument }) {
+    return map(
       (doc) => {
         return this.transformDoc(doc as TDocument);
       },
-      filter(
-        (doc) => this.filter(doc),
-        this.collection.snapshot as { [id: string]: TDocument },
-      ),
+      filter(this.filter ? (doc) => this.filter!(doc) : () => true, snapshot),
     ) as { [id: string]: TDocument };
-    return viewSnapshot;
+  }
+
+  get snapshot(): { [id: string]: TDocument } {
+    return this.transformSnapshot(this.collection.snapshot);
   }
 
   get(id: string): TDocument | undefined {
     const doc = this.collection.get(id) as TDocument;
     return (
-      (doc && this.filter(doc) && this.transformDoc(doc as TDocument)) ||
+      (doc &&
+        (!this.filter || this.filter(doc)) &&
+        this.transformDoc(doc as TDocument)) ||
       undefined
     );
   }

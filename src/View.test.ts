@@ -227,6 +227,37 @@ describe('View', () => {
         value: false,
       },
     ]);
+
+    await collection.update(id1, (doc) => {
+      doc.secret = false;
+    });
+
+    expect(view.snapshot[id2]).toEqual({ id: id2, test: 'two', secret: false });
+    expect(view.get(id2)).toEqual({ id: id2, test: 'two', secret: false });
+
+    expect(onViewImmerPatches).toHaveBeenCalledTimes(2);
+    expect(onViewImmerPatches).toHaveBeenLastCalledWith([
+      {
+        op: 'add',
+        path: [id1],
+        value: {},
+      },
+      {
+        op: 'add',
+        path: [id1, 'id'],
+        value: id1,
+      },
+      {
+        op: 'add',
+        path: [id1, 'test'],
+        value: 'one',
+      },
+      {
+        op: 'add',
+        path: [id1, 'secret'],
+        value: false,
+      },
+    ]);
   });
 
   afterAll(async () => {
