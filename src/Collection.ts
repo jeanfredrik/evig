@@ -35,7 +35,9 @@ export type CollectionEventMap = {
 export type CollectionConstructorOptions = {
   redis: RedisClientType;
   prefix?: string;
+  maxListeners?: number;
 };
+export type CollectionOptions = CollectionConstructorOptions;
 
 export default class Collection<
   TDocument extends Document<'id'> = Document<'id'>,
@@ -48,7 +50,7 @@ export default class Collection<
 
   constructor(
     name: string,
-    { redis, prefix = 'evig_' }: CollectionConstructorOptions,
+    { redis, prefix = 'evig_', maxListeners = 0 }: CollectionConstructorOptions,
   ) {
     super();
     this.name = name;
@@ -57,6 +59,7 @@ export default class Collection<
     this.idKey = 'id';
     this.data = {};
     this.on('redisPatches', this.applyRedisPatches);
+    this.setMaxListeners(maxListeners);
   }
 
   async loadFromRedis() {

@@ -20,6 +20,7 @@ export type ViewOptions<
   // TCollection extends Collection<TDocument>,
   TDocument extends Document<'id'> = Document<'id'>,
 > = {
+  maxListeners?: number;
   includedFields?: string[];
   excludedFields?: string[];
   filter?: (doc: TDocument) => boolean;
@@ -37,6 +38,7 @@ export default class View<
   constructor(
     collection: TCollection,
     {
+      maxListeners = 0,
       includedFields = [],
       excludedFields = [],
       filter = () => true,
@@ -51,6 +53,7 @@ export default class View<
     this.excludedFields = new Set(excludedFields);
     this.includedFields = new Set(includedFields);
     this.filter = filter;
+    this.setMaxListeners(maxListeners);
   }
 
   onCollectionPatches(expandedImmerPatches: ImmerPatch[]) {
