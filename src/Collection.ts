@@ -21,15 +21,40 @@ import mimic from './mimic.js';
 
 enablePatches();
 
-export type CollectionEventMap = {
+export type CollectionEventMap<TDocument extends Document<'id'>> = {
   // insert: Document<'id'>;
   // update: (doc: Document<'id'>, patches: Patch[]) => void;
   // delete: (doc: Document<'id'>) => void;
   immerPatches: [ImmerPatch[]];
+  immerPatchesWithSnapshot: [
+    ImmerPatch[],
+    { [id: string]: TDocument },
+    { [id: string]: TDocument },
+  ];
   expandedImmerPatches: [ImmerPatch[]];
+  expandedImmerPatchesWithSnapshot: [
+    ImmerPatch[],
+    { [id: string]: TDocument },
+    { [id: string]: TDocument },
+  ];
   patches: [Patch[]];
+  patchesWithSnapshot: [
+    Patch[],
+    { [id: string]: TDocument },
+    { [id: string]: TDocument },
+  ];
   expandedPatches: [Patch[]];
+  expandedPatchesWithSnapshot: [
+    Patch[],
+    { [id: string]: TDocument },
+    { [id: string]: TDocument },
+  ];
   redisPatches: [RedisPatch[]];
+  redisPatchesWithSnapshot: [
+    RedisPatch[],
+    { [id: string]: TDocument },
+    { [id: string]: TDocument },
+  ];
 };
 
 export type CollectionConstructorOptions = {
@@ -41,7 +66,7 @@ export type CollectionOptions = CollectionConstructorOptions;
 
 export default class Collection<
   TDocument extends Document<'id'> = Document<'id'>,
-> extends EventEmitter<CollectionEventMap> {
+> extends EventEmitter<CollectionEventMap<TDocument>> {
   private redis: RedisClientType;
   readonly name: string;
   readonly prefix: string;
@@ -134,13 +159,15 @@ export default class Collection<
       const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
         draft[id] = doc as Draft<TDocument>;
       });
+      const snapshot = this.data;
       this.data = newData;
-      return { immerPatches };
+      return { immerPatches, snapshot };
     });
-    const { immerPatches } = (await job.result) as {
+    const { immerPatches, snapshot } = (await job.result) as {
       immerPatches: ImmerPatch[];
+      snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches);
+    this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async update(id: string, recipe: (draft: Draft<TDocument>) => void) {
@@ -154,13 +181,15 @@ export default class Collection<
       const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
         recipe(draft[id]);
       });
+      const snapshot = this.data;
       this.data = newData;
-      return { immerPatches };
+      return { immerPatches, snapshot };
     });
-    const { immerPatches } = (await job.result) as {
+    const { immerPatches, snapshot } = (await job.result) as {
       immerPatches: ImmerPatch[];
+      snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches);
+    this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async upsert(id: string, recipe: (draft: Draft<TDocument>) => void) {
@@ -169,13 +198,15 @@ export default class Collection<
         draft[id] ??= { id } as Draft<TDocument>;
         recipe(draft[id]);
       });
+      const snapshot = this.data;
       this.data = newData;
-      return { immerPatches };
+      return { immerPatches, snapshot };
     });
-    const { immerPatches } = (await job.result) as {
+    const { immerPatches, snapshot } = (await job.result) as {
       immerPatches: ImmerPatch[];
+      snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches);
+    this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async remove(id: string) {
@@ -189,13 +220,15 @@ export default class Collection<
       const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
         delete draft[id];
       });
+      const snapshot = this.data;
       this.data = newData;
-      return { immerPatches };
+      return { immerPatches, snapshot };
     });
-    const { immerPatches } = (await job.result) as {
+    const { immerPatches, snapshot } = (await job.result) as {
       immerPatches: ImmerPatch[];
+      snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches);
+    this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async replaceAll(data: { [id: string]: TDocument } | TDocument[]) {
@@ -206,32 +239,63 @@ export default class Collection<
       const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
         mimic(draft, castDraft(data));
       });
+      const snapshot = this.data;
       this.data = newData;
-      return { immerPatches };
+      return { immerPatches, snapshot };
     });
-    const { immerPatches } = (await job.result) as {
+    const { immerPatches, snapshot } = (await job.result) as {
       immerPatches: ImmerPatch[];
+      snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches);
+    this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   /**
    * Emits events for patches in different formats
    */
-  private propagateImmerPatches(immerPatches: ImmerPatch[]) {
+  private propagateImmerPatches(
+    immerPatches: ImmerPatch[],
+    newSnapshot: { [id: string]: TDocument },
+    oldSnapshot: { [id: string]: TDocument },
+  ) {
     this.emit('immerPatches', immerPatches);
+    this.emit(
+      'immerPatchesWithSnapshot',
+      immerPatches,
+      newSnapshot,
+      oldSnapshot,
+    );
 
     const expandedImmerPatches = immerPatches.flatMap(expandImmerPatch);
     this.emit('expandedImmerPatches', expandedImmerPatches);
+    this.emit(
+      'expandedImmerPatchesWithSnapshot',
+      expandedImmerPatches,
+      newSnapshot,
+      oldSnapshot,
+    );
 
     const patches = immerPatches.map(fromImmerPatch);
     this.emit('patches', patches);
+    this.emit('patchesWithSnapshot', patches, newSnapshot, oldSnapshot);
 
     const expandedPatches = expandedImmerPatches.map(fromImmerPatch);
     this.emit('expandedPatches', expandedPatches);
+    this.emit(
+      'expandedPatchesWithSnapshot',
+      expandedPatches,
+      newSnapshot,
+      oldSnapshot,
+    );
 
     const redisPatches = toRedisPatches(patches);
     this.emit('redisPatches', redisPatches);
+    this.emit(
+      'redisPatchesWithSnapshot',
+      redisPatches,
+      newSnapshot,
+      oldSnapshot,
+    );
   }
 
   private async applyRedisPatches(redisPatches: RedisPatch[]) {
