@@ -60,6 +60,9 @@ export default class View<
     expandedImmerPatches = expandedImmerPatches.filter((patch) =>
       this.isPatchApplicable(patch),
     );
+    if (expandedImmerPatches.length === 0) {
+      return;
+    }
     this.emit('expandedImmerPatches', expandedImmerPatches);
 
     const expandedPatches = expandedImmerPatches.map(fromImmerPatch);
@@ -67,6 +70,10 @@ export default class View<
   }
 
   isPatchApplicable(patch: ImmerPatch) {
+    const id = patch.path[0] as string;
+    if (!this.filter(this.collection.get(id) as TDocument)) {
+      return false;
+    }
     const field = patch.path[1] as string;
     if (field && this.excludedFields.has(field)) {
       return false;

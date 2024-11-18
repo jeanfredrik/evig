@@ -193,13 +193,18 @@ describe('View', () => {
     view.on('expandedImmerPatches', onViewImmerPatches);
 
     await collection.insert({ id: id1, test: 'one', secret: true });
-    await collection.insert({ id: id2, test: 'two', secret: false });
 
     expect(view.snapshot[id1]).toBeUndefined();
     expect(view.get(id1)).toBeUndefined();
+
+    expect(onViewImmerPatches).toHaveBeenCalledTimes(0);
+
+    await collection.insert({ id: id2, test: 'two', secret: false });
+
     expect(view.snapshot[id2]).toEqual({ id: id2, test: 'two', secret: false });
     expect(view.get(id2)).toEqual({ id: id2, test: 'two', secret: false });
 
+    expect(onViewImmerPatches).toHaveBeenCalledTimes(1);
     expect(onViewImmerPatches).toHaveBeenLastCalledWith([
       {
         op: 'add',
