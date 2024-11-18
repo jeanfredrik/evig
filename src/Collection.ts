@@ -55,6 +55,7 @@ export type CollectionEventMap<TDocument extends Document<'id'>> = {
     { [id: string]: TDocument },
     { [id: string]: TDocument },
   ];
+  destroy: [];
 };
 
 export type CollectionConstructorOptions = {
@@ -83,7 +84,11 @@ export default class Collection<
     this.prefix = prefix;
     this.idKey = 'id';
     this.data = {};
+    this.applyRedisPatches = this.applyRedisPatches.bind(this);
     this.on('redisPatches', this.applyRedisPatches);
+    this.once('destroy', () => {
+      this.off('redisPatches', this.applyRedisPatches);
+    });
     this.setMaxListeners(maxListeners);
   }
 
@@ -300,5 +305,9 @@ export default class Collection<
 
   private async applyRedisPatches(redisPatches: RedisPatch[]) {
     await applyRedisPatches(this.redis, this.redisKey, redisPatches);
+  }
+
+  destroy() {
+    this.emit('destroy');
   }
 }

@@ -260,6 +260,23 @@ describe('View', () => {
     ]);
   });
 
+  describe('destroy', () => {
+    it('Emits "destroy" event and removes all its listeners', async () => {
+      const collectionListenersBefore =
+        collection.listeners('expandedPatches').length;
+      const view = new View(collection);
+      const onDestroy = vi.fn();
+      view.on('destroy', onDestroy);
+      view.destroy();
+      expect(onDestroy).toHaveBeenCalledTimes(1);
+      const collectionListenersAfter =
+        collection.listeners('expandedPatches').length;
+      const viewListenersAfter = view.listeners('expandedPatches').length;
+      expect(collectionListenersAfter).toBe(collectionListenersBefore);
+      expect(viewListenersAfter).toBe(0);
+    });
+  });
+
   afterAll(async () => {
     await redis.del(redisKey);
   });

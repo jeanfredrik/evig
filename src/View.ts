@@ -16,6 +16,7 @@ export type ViewEventMap = {
   expandedImmerPatches: [ImmerPatch[]];
   // patches: [Patch[]];
   expandedPatches: [Patch[]];
+  destroy: [];
 };
 
 export type ViewOptions<
@@ -48,10 +49,17 @@ export default class View<
   ) {
     super();
     this.collection = collection;
+    this.onCollectionPatches = this.onCollectionPatches.bind(this);
     this.collection.on(
       'expandedImmerPatchesWithSnapshot',
-      this.onCollectionPatches.bind(this),
+      this.onCollectionPatches,
     );
+    this.once('destroy', () => {
+      this.collection.off(
+        'expandedImmerPatchesWithSnapshot',
+        this.onCollectionPatches,
+      );
+    });
     this.excludedFields = new Set(excludedFields);
     this.includedFields = new Set(includedFields);
     this.filter = filter;
@@ -144,6 +152,10 @@ export default class View<
         this.transformDoc(doc as TDocument)) ||
       undefined
     );
+  }
+
+  destroy() {
+    this.emit('destroy');
   }
 
   // getId(doc: TDocument) {

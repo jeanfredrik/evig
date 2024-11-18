@@ -6,6 +6,7 @@ import {
   beforeEach,
   afterAll,
   afterEach,
+  vi,
 } from 'vitest';
 import { RedisClientType, createClient } from 'redis';
 
@@ -150,6 +151,19 @@ describe('Collection', () => {
         '1': data[0],
         '2': data[1],
       });
+    });
+  });
+
+  describe('destroy', () => {
+    it('Emits "destroy" event and removes all its listeners', async () => {
+      const collection = new Collection('test', { redis });
+      const onDestroy = vi.fn();
+      collection.on('destroy', onDestroy);
+      collection.destroy();
+      expect(onDestroy).toHaveBeenCalledTimes(1);
+      const collectionListenersAfter =
+        collection.listeners('expandedPatches').length;
+      expect(collectionListenersAfter).toBe(0);
     });
   });
 
