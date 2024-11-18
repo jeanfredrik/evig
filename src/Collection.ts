@@ -175,6 +175,26 @@ export default class Collection<
     this.propagateImmerPatches(immerPatches);
   }
 
+  async remove(id: string) {
+    const job = queue.add(async () => {
+      const existingDoc = this.get(id);
+      if (!existingDoc) {
+        throw new Error(
+          `Document with id "${id}" does not exist on ${this.name}`,
+        );
+      }
+      const [newData, immerPatches] = produceWithPatches(this.data, (draft) => {
+        delete draft[id];
+      });
+      this.data = newData;
+      return { immerPatches };
+    });
+    const { immerPatches } = (await job.result) as {
+      immerPatches: ImmerPatch[];
+    };
+    this.propagateImmerPatches(immerPatches);
+  }
+
   async replaceAll(data: { [id: string]: TDocument } | TDocument[]) {
     if (Array.isArray(data)) {
       data = indexBy((doc) => this.getId(doc), data);

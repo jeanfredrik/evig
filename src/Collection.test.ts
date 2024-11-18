@@ -109,6 +109,23 @@ describe('Collection', () => {
     expect(updatedDoc).toEqual({ id: 'dummy', name: 'updated' });
   });
 
+  describe('remove', () => {
+    it('removes an existing document', async () => {
+      const collection = new Collection('test', { redis });
+      const doc = { id: '1', name: 'test' };
+      await collection.insert(doc);
+      await collection.remove(doc.id);
+      const removedDoc = collection.get(doc.id);
+      expect(removedDoc).toBeUndefined();
+    });
+    it('throws when removing a missing document', async () => {
+      const collection = new Collection('test', { redis });
+      await expect(collection.remove('missing')).rejects.toThrow(
+        'Document with id "missing" does not exist',
+      );
+    });
+  });
+
   describe('replaceAll', () => {
     it('replaces all documents', async () => {
       const collection = new Collection('test', { redis });
