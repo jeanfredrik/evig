@@ -114,11 +114,12 @@ describe('Collection', () => {
     it('saves changes to Redis', async () => {
       const collection = new Collection('test', { redis });
       await collection.init();
-      const doc = { id: 'dummy', name: 'test' };
+      const doc = { id: 'dummy', name: 'test', foo: 'bar' };
 
       await collection.insert(doc);
       await collection.update(doc.id, (draft) => {
         draft.name = 'updated';
+        delete draft.foo;
       });
       expect(
         JSON.parse((await redis.hGet(collection.redisKey, doc.id)) || 'null'),

@@ -13,19 +13,18 @@ export default async function applyRedisPatches<
   TDocument extends Document<any>,
 >(redis: RedisClientType, redisKey: string, redisPatches: RedisPatch[]) {
   const pipeline = redis.multi();
+  const intermediate: Record<string, TDocument | undefined> = {};
   for (const redisPatch of redisPatches) {
     const { op, field, value, patch } = redisPatch;
     switch (op) {
       case 'set':
         {
-          // console.log('hset', redisKey, field, stringifyDoc(value));
-          pipeline.hSet(redisKey, field, stringifyDoc(value));
+          intermediate[field] = value;
         }
         break;
       case 'del':
         {
-          // console.log('hdel', redisKey, field);
-          pipeline.hDel(redisKey, field);
+          intermediate[field] = undefined;
         }
         break;
       case 'patch':
@@ -35,20 +34,31 @@ export default async function applyRedisPatches<
               `Patch missing in RedisPatch with field "${field}"`,
             );
           }
-          let value = await redis.hGet(redisKey, field);
-          if (!value) {
+          if (!(field in intermediate)) {
+            const prevValue = await redis.hGet(redisKey, field);
+            intermediate[field] = prevValue ? parseDoc(prevValue) : undefined;
+          }
+          if (!intermediate[field]) {
             throw new Error(
               `Field "${field}" not found in Redis for key "${redisKey}"`,
             );
           }
-          let doc: TDocument = parseDoc(value);
-          doc = applyPatches(doc, [toImmerPatch(patch)]);
-          // console.log('hset', redisKey, field, stringifyDoc(doc));
-          pipeline.hSet(redisKey, field, stringifyDoc(doc));
+          intermediate[field] = applyPatches(intermediate[field], [
+            toImmerPatch(patch),
+          ]);
         }
         break;
       default:
         throw new Error(`Unknown op in RedisPatch: ${op}`);
+    }
+  }
+  for (const [field, value] of Object.entries(intermediate)) {
+    if (value === undefined) {
+      // console.log('hdel', redisKey, field);
+      pipeline.hDel(redisKey, field);
+    } else {
+      // console.log('hset', redisKey, field, stringifyDoc(value));
+      pipeline.hSet(redisKey, field, stringifyDoc(value));
     }
   }
   await pipeline.exec();
