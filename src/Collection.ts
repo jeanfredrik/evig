@@ -85,10 +85,10 @@ export default class Collection<
     this.idKey = 'id';
     this.data = {};
     this.applyRedisPatches = this.applyRedisPatches.bind(this);
-    this.on('redisPatches', this.applyRedisPatches);
-    this.once('destroy', () => {
-      this.off('redisPatches', this.applyRedisPatches);
-    });
+    // this.on('redisPatches', this.applyRedisPatches);
+    // this.once('destroy', () => {
+    //   this.off('redisPatches', this.applyRedisPatches);
+    // });
     this.setMaxListeners(maxListeners);
   }
 
@@ -172,7 +172,7 @@ export default class Collection<
       immerPatches: ImmerPatch[];
       snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches, this.data, snapshot);
+    await this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async update(id: string, recipe: (draft: Draft<TDocument>) => void) {
@@ -194,7 +194,7 @@ export default class Collection<
       immerPatches: ImmerPatch[];
       snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches, this.data, snapshot);
+    await this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async upsert(id: string, recipe: (draft: Draft<TDocument>) => void) {
@@ -211,7 +211,7 @@ export default class Collection<
       immerPatches: ImmerPatch[];
       snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches, this.data, snapshot);
+    await this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async remove(id: string) {
@@ -233,7 +233,7 @@ export default class Collection<
       immerPatches: ImmerPatch[];
       snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches, this.data, snapshot);
+    await this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   async replaceAll(data: { [id: string]: TDocument } | TDocument[]) {
@@ -252,13 +252,13 @@ export default class Collection<
       immerPatches: ImmerPatch[];
       snapshot: { [id: string]: TDocument };
     };
-    this.propagateImmerPatches(immerPatches, this.data, snapshot);
+    await this.propagateImmerPatches(immerPatches, this.data, snapshot);
   }
 
   /**
    * Emits events for patches in different formats
    */
-  private propagateImmerPatches(
+  private async propagateImmerPatches(
     immerPatches: ImmerPatch[],
     newSnapshot: { [id: string]: TDocument },
     oldSnapshot: { [id: string]: TDocument },
@@ -294,6 +294,7 @@ export default class Collection<
     );
 
     const redisPatches = toRedisPatches(patches);
+    await this.applyRedisPatches(redisPatches);
     this.emit('redisPatches', redisPatches);
     this.emit(
       'redisPatchesWithSnapshot',

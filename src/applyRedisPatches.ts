@@ -18,11 +18,13 @@ export default async function applyRedisPatches<
     switch (op) {
       case 'set':
         {
+          // console.log('hset', redisKey, field, stringifyDoc(value));
           pipeline.hSet(redisKey, field, stringifyDoc(value));
         }
         break;
       case 'del':
         {
+          // console.log('hdel', redisKey, field);
           pipeline.hDel(redisKey, field);
         }
         break;
@@ -41,6 +43,7 @@ export default async function applyRedisPatches<
           }
           let doc: TDocument = parseDoc(value);
           doc = applyPatches(doc, [toImmerPatch(patch)]);
+          // console.log('hset', redisKey, field, stringifyDoc(doc));
           pipeline.hSet(redisKey, field, stringifyDoc(doc));
         }
         break;
